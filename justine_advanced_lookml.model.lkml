@@ -21,30 +21,44 @@ include: "/views/*.view.lkml"                # include all views in the views/ f
 
 explore: order_items {
   label: "Order Item Information"
+  always_filter: {
+    filters: [order_items.created_date: "2022/05/10 for 3 days"]
+  }
 
   join: inventory_items {
-    type: left_outer
+    type: full_outer
     relationship: one_to_one
     sql_on: ${order_items.inventory_item_id} = ${inventory_items.id} ;;
   }
   join: users {
     type: left_outer
-    relationship:  one_to_one
+    relationship:  many_to_one
     sql_on: ${users.id} = ${order_items.user_id};;
+  }
+  join: customer_facts {
+    type: left_outer
+    relationship: one_to_one
+    sql_on: ${users.id} = ${customer_facts.users_id} ;;
+  }
+  join: order_facts {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${order_facts.users_id} = ${customer_facts.users_id} ;;
   }
   join: distribution_centers {
     type: left_outer
-    relationship: one_to_one
+    relationship: many_to_one
     sql_on: ${inventory_items.product_distribution_center_id} = ${distribution_centers.id} ;;
   }
   join: products {
     type: left_outer
-    relationship: one_to_one
+    relationship: many_to_one
     sql_on: ${inventory_items.product_id} = ${products.id} ;;
   }
   join: events {
     type: left_outer
-    relationship: one_to_one
+    relationship: many_to_one
     sql_on: ${events.user_id} = ${users.id} ;;
   }
+
 }

@@ -21,6 +21,15 @@ view: users {
     sql: ${age} ;;
   }
 
+  parameter: age_tier_bucket_size {
+    type: number
+  }
+
+  dimension: dynamic_age_tier {
+    type: number
+    sql: TRUNC(${age} / {% parameter age_tier_bucket_size %},0) * {% parameter age_tier_bucket_size %}  ;;
+  }
+
   dimension: city {
     type: string
     sql: ${TABLE}.city ;;
@@ -99,6 +108,31 @@ view: users {
     value_format_name: decimal_0
     description: "The number of days since the user has signed up"
     sql: DATE_DIFF(CURRENT_DATE(),DATE(${created_raw}),DAY) ;;
+  }
+
+  dimension: months_since_signup {
+    type: number
+    value_format_name: decimal_0
+    sql: DATE_DIFF(CURRENT_DATE(),DATE(${created_raw}),MONTH) ;;
+  }
+
+  dimension: customer_cohort {
+    label: "Customer Cohort (Months)"
+    value_format: "0 \" Months\""
+    type: tier
+    tiers: [3,6,9,12,24]
+    sql: ${months_since_signup} ;;
+    style: integer
+  }
+
+  measure: avg_days_since_signup {
+    type: average
+    sql: ${days_since_signup} ;;
+  }
+
+  measure: avg_months_since_signup {
+    type: average
+    sql: ${months_since_signup} ;;
   }
 
   measure: num_of_cx_returning_items {

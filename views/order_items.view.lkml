@@ -24,6 +24,23 @@ view: order_items {
     sql: ${TABLE}.created_at ;;
   }
 
+  parameter: date_granularity {
+    type: string
+    allowed_value: { label: "Day" value: "Day" }
+    allowed_value: { label: "Week" value: "Week" }
+    allowed_value: { label: "Month" value: "Month" }
+  }
+
+  dimension: date {
+    label_from_parameter: date_granularity
+    sql:
+    {% if date_granularity._parameter_value == "'Day'" %} ${created_date}
+    {% elsif date_granularity._parameter_value == "'Week'" %} ${created_week}
+    {% elsif date_granularity._parameter_value == "'Month'" %} ${created_month}
+    {% else %} NULL
+    {% endif %} ;;
+  }
+
   dimension_group: delivered {
     type: time
     timeframes: [
@@ -84,43 +101,51 @@ view: order_items {
 
   measure: cumulative_total_sales {
     type: running_total
-    sql: ${sale_price} ;;
+    sql: ${total_sale_price} ;;
     value_format_name: usd
+    drill_fields: [detail*]
   }
 
   measure: total_gross_revenue {
     type: sum
     value_format:"[>=1000000]$0.00,,\"M\";[>=1000]$0.00,\"K\";$0.00"
-    filters: [status: "-RETURNED, -CANCELLED"]
+    filters: [status: "-Returned, -Cancelled"]
     sql: ${sale_price};;
-    drill_fields: [users.age_tier, users.gender, total_gross_revenue]
+    #drill_fields: [users.age_tier, users.gender, total_gross_revenue]
+    drill_fields: [detail*]
   }
 
   measure: total_gross_margin {
     type: number
     sql: ${total_gross_revenue} - ${inventory_items.total_cost} ;;
     value_format_name: usd
+    drill_fields: [detail*]
   }
 
   measure: gross_margin_percentage {
     type: number
     value_format_name: percent_2
     sql: ${total_gross_margin}/NULLIF(${total_gross_revenue},0);;
+    drill_fields: [detail*]
   }
 
   measure: average_gross_margin {
     type: average
+    filters: [status: "-Returned, -Cancelled"]
     sql: ${sale_price} - ${inventory_items.cost} ;;
+    drill_fields: [detail*]
   }
 
   measure: num_of_items_returned {
     type: count
     filters: [status: "Returned"]
+    drill_fields: [detail*]
   }
 
   measure: rate_of_items_returned {
     type: percent_of_total
     sql: ${num_of_items_returned};;
+    drill_fields: [detail*]
   }
 
   dimension_group: shipped {
