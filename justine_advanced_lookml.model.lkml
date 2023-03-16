@@ -22,7 +22,7 @@ include: "/views/*.view.lkml"                # include all views in the views/ f
 explore: order_items {
   label: "Order Item Information"
   always_filter: {
-    filters: [order_items.created_date: "2022/05/10 for 3 days"]
+    filters: [order_items.created_date: "2022/05/10 for 770 days"]
   }
 
   join: inventory_items {
